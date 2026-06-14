@@ -2,15 +2,13 @@
 
 给 pytest 加一条 AI 断言，遇到不太好写断言规则的情况，直接用自然语言描述期望，让大模型来判断。
 
-## 缘起
+## 项目背景
 
 做接口测试的时候，有些场景靠 hardcode 的 assert 很难覆盖——比如"返回的用户信息应该合理""余额不能为负数，商品数量和金额应该匹配"。传统做法的解决方案就两种：要么写一长串 if/else 加一堆边界值判断，要么干脆不测。
 
 于是想到让 LLM 来做这件事——把"期望"用自然语言写出来，AI 帮你判断响应符不符合。然后看了 pytest 的 hook 机制和插件文档，照着 fixture 规范把这个功能做成了 pytest 插件。
 
-## 是怎么做的
-
-整体思路比较简单：
+## 思路
 
 1. 写了 `AIJudge` 类，封装了 OpenAI 的调用，每次都带上一段 System Prompt 告诉 LLM 怎么判断
 2. 写了一个 pytest fixture（`ai_assert`），在测试函数里注入这个 fixture
@@ -28,7 +26,7 @@
 pip install -e .
 ```
 
-## 怎么用
+## 用法
 
 ```python
 def test_user_api(ai_assert):
@@ -43,14 +41,14 @@ def test_user_api(ai_assert):
     assert result.verdict == "pass"
 ```
 
-## 局限
+## 不足之处
 
 - 每条 ai_assert 都要调一次 LLM API，用例多了成本不低，不太适合大批量回归测试
 - LLM 偶尔会判断错误，建议用在复杂场景的辅助判断上，简单的还是用 assert
 - 目前只支持 OpenAI 兼容的 API（DeepSeek 等也可以用）
 - 还不太成熟，比如没有做 LLM 调用的缓存，相同响应重复判断会重复花钱
 
-## 跑一下
+## 验证
 
 ```bash
 # 先设好 API Key（用 DeepSeek 便宜点）
